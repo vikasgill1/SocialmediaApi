@@ -12,5 +12,9 @@ urlpatterns = [
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('token/verify/', TokenVerifyView.as_view(), name='token_verify'),
-    
+    path('post/',PostView.as_view()),
+    path('likeview/',likeView.as_view()),
+    path('like/',like.as_view()),
+    path('commentView',CommentView.as_view()),
+    path('comment',comment.as_view())
 ]
