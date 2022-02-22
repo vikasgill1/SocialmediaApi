@@ -78,13 +78,16 @@ class PostView(APIView):
         stu.delete()
         return Response('delete succesfully')
 
-class Postlike(APIView):
-    permission_classes=[IsAuthenticated,]
+class likeView(APIView):
     def get(self,request):
         data=request.data
         stu=Postlike.objects.filter(post__id=data.get('post'),like=True)
+        count=stu.count()
         serializer=likeSerializer(stu,many=True)
-        return Response(serializer.data)
+        return Response(serializer.data,{"like":count})
+
+class like(APIView):
+    permission_classes=[IsAuthenticated,]
     def post(self,request):
         
         user=request.user
@@ -100,10 +103,42 @@ class Postlike(APIView):
             stu.save()
             return Response('unlike')
 
-class Postcomment(APIView):
 
+    
+class CommentView(APIView):
+    def get(self,request):
+        data=request.data
+        stu=Postcomment.objects.filter(post__id=data.get('post'))
+        count=stu.count()
+        serializer=likeSerializer(stu,many=True)
+        return Response(serializer.data,{"comment":count})
 
         
+class comment(APIView):
+    permission_classes=[IsAuthenticated,]
+    def post(self,request):
+        data=request.data
+        user=request.user
+        serialzer=PostSerializer(user=user,post=data.get('post'),comment=data.get('comment'))
+        if serialzer.is_valid():
+            serialzer.save()
+            return Response({'status': 'comment successfully in a post'})
+        return Response(serialzer.errors)
 
 
-        
+    def put(self,request):
+        user=request.user
+        data=request.data
+        stu=Postcomment.objects.filter(user=user,post__id=data.get('post'))
+        serializer=UserSerializer(instance=stu,data=request.data,partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status':'update successfull'})
+        return Response({'status': serializer.errors})
+    
+    def delete(self,request):
+        user=request.user
+        data=request.data
+        stu=User.objects.filter(user=user,post__id=data.get('post'))
+        stu.delete()
+        return Response({'status': 'your account delete successfull'})      
