@@ -54,17 +54,18 @@ class PostView(APIView):
         serializer=PostSerializer(stu,many=True)
         return Response(serializer.data)
     
-    def post(self,request):
-        user=request.user
-        serializer=PostSerializer(user=user,data=request.data)
+    def post(self,request): 
+        # data=request.user  
+        stu=Post.objects.create(user=request.user,) 
+        serializer=PostSerializer(instance=stu,data=request.data,partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response({'status':'post successfull'})
         return Response(serializer.errors)
 
     def put(self,request):
-        user=request.user
-        stu=Post.objects.filter(user=user)
+        
+        stu=Post.objects.get(user=request.user)
         seriailizer=PostSerializer(instance=stu,data=request.data)
         if seriailizer.is_valid():
             seriailizer.save()
@@ -81,7 +82,7 @@ class PostView(APIView):
 class likeView(APIView):
     def get(self,request):
         data=request.data
-        stu=Postlike.objects.filter(post__id=data.get('post'),like=True)
+        stu=Postlike.objects.filter(post_id=data.get('post'),like=True)
         count=stu.count()
         serializer=likeSerializer(stu,many=True)
         return Response(serializer.data,{"like":count})
@@ -92,7 +93,7 @@ class like(APIView):
         
         user=request.user
         data=request.data
-        stu=Postlike.objects.get_or_create(post__id=data.get('post'),user=user)
+        stu,_=Postlike.objects.get_or_create(post_id=data.get('post'),user=user)
         if stu.like == True :
             stu.like = False
             stu.save()
@@ -108,7 +109,7 @@ class like(APIView):
 class CommentView(APIView):
     def get(self,request):
         data=request.data
-        stu=Postcomment.objects.filter(post__id=data.get('post'))
+        stu=Postcomment.objects.filter(post_id=data.get('post'))
         count=stu.count()
         serializer=likeSerializer(stu,many=True)
         return Response(serializer.data,{"comment":count})
@@ -117,9 +118,8 @@ class CommentView(APIView):
 class comment(APIView):
     permission_classes=[IsAuthenticated,]
     def post(self,request):
-        data=request.data
-        user=request.user
-        serialzer=PostSerializer(user=user,post=data.get('post'),comment=data.get('comment'))
+        stu=Postcomment.objects.create(user=request.user)
+        serialzer=PostSerializer(stu,data=request.data)
         if serialzer.is_valid():
             serialzer.save()
             return Response({'status': 'comment successfully in a post'})
@@ -129,7 +129,7 @@ class comment(APIView):
     def put(self,request):
         user=request.user
         data=request.data
-        stu=Postcomment.objects.filter(user=user,post__id=data.get('post'))
+        stu=Postcomment.objects.filter(user=user,post_id=data.get('post'))
         serializer=UserSerializer(instance=stu,data=request.data,partial=True)
         if serializer.is_valid():
             serializer.save()
