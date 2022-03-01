@@ -16,7 +16,8 @@ urlpatterns = [
     path('likeview/',likeView.as_view()),
     path('like/',like.as_view()),
     path('commentView',CommentView.as_view()),
-    path('comment',comment.as_view()),
-    path('sendRequest',SendFriendRequest.as_view()),
-    path('acceptRequest',AcceptFriendRequest.as_view())
+    path('comment',comment.as_view()),  
+    path('sendrequest1',SendRequest.as_view()),
+    path('acceptrequest1',AcceptRequest.as_view()),
+
 ]

@@ -1,9 +1,9 @@
 
-from os import truncate
+from functools import partial
 from django.http import Http404
 from rest_framework.status import *
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView
+# from rest_framework.generics import ListAPIView
 from .serializers import *
 from ..models import *
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -150,53 +150,47 @@ class comment(APIView):
         stu.delete()
         return Response({'status': 'your account delete successfull'})      
 
-class SendFriendRequest(APIView):
-    permission_classes=[IsAuthenticated,]
+
+class SendRequest(APIView):
+    permission_classes=[IsAuthenticated]
     def get(self,request):
-        stu=FriendRequest.objects.filter(to_user=request.user,is_accept=False)
-        count=stu.count()
-        serializer=FriendRequestSerializer(stu)
-        return Response({'data':serializer.data,'count':count})
-    
+        stu=FriendRequest1.objects.filter(user_to=request.user,is_accept=False)
+        serializer=FriendRequest1Serializer(stu,many=True)
+        return Response(serializer.data)
     def post(self,request):
-        stu=FriendRequest.objects.create(to_user=request.user)
-        serializer=FriendRequestSerializer(stu,data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'status': 'Send Friend Request successfully'})
-        return Response({'status': serializer.errors})
+        stu,_=FriendRequest1.objects.get_or_create(user_to=request.user,user_from_id=request.data.get('user_from'))
+        stu.save()
+        return Response({'status': 'sendfriend Request'})
 
     def delete(self,request):
         try:
-            stu=stu=FriendRequest.objects.filter(to_user=request.user,from_user=request.data.get('from_user'))
+            stu=FriendRequest1.objects.filter(user_to=request.user,is_accept=False,user_form_id=request.data.get('user_from'))
             stu.delete()
-            return Response({'status': 'Cancel Friend Request successfully'})
+            return Response({'status': 'sendfriend Request'})
         except:
             return Response({'status':'User does not exits'})
 
-
-
-
-class AcceptFriendRequest(APIView):
-    permission_classes=[IsAuthenticated,]
+class AcceptRequest(APIView):
+    permission_classes=[IsAuthenticated]
     def get(self,request):
-        stu=FriendRequest.objects.filter(from_user=request.user,is_accept=False)
-        # counts=stu.count()
-        serializers=FriendRequestSerializer(stu)
-        return Response({'data':serializers.data})
-    
-    def patch(self,request):
-        stu=FriendRequest.objects.filter(from_user=request.user,is_accept=False)
-        serializer=FriendRequestSerializer(stu,data=request.data,partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'status': 'accept Request successfully'})
-        return Response({'status': serializer.errors})
+        stu=FriendRequest1.objects.filter(user_from=request.user,is_accept=False)
+        serializer=FriendRequest1Serializer(stu,many=True)
+        return Response(serializer.data)
+    def put(self,request):
+        try:
+            stu=FriendRequest1.objects.get(user_from=request.user,is_accept=False,user_to_id=request.data.get('user_to'))
+            stu.is_accept = True
+            stu.save()
+            return Response({'status':'accept request'})
+        except Exception as e:
+            return Response({'error':str(e)})
+        
 
     def delete(self,request):
         try:
-            stu=stu=FriendRequest.objects.filter(from_user=request.user,to_user=request.data.get('to_user'))
+            stu=FriendRequest1.objects.filter(user_from=request.user,is_accept=False,user_to_id=request.data.get('user_to'))
             stu.delete()
-            return Response({'status': 'Cancel  Request successfully'})
-        except:
-            return Response({'status':'User does not exits'})
+            return Response({'status': 'Cancel friend Request'})
+        except Exception as e:
+            return Response({'status': str(e)})
+        

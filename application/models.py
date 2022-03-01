@@ -21,7 +21,11 @@ class Postcomment(models.Model):
     post=models.ForeignKey(Post,on_delete=models.CASCADE)
     comment=models.TextField(max_length=999)
 
-class FriendRequest(models.Model):
-    to_user=models.ForeignKey(User,related_name='to_user',on_delete=models.CASCADE)
-    from_user=models.ForeignKey(User,related_name='from_user',on_delete=models.CASCADE)
+
+
+class FriendRequest1(models.Model):
+    user_to=models.ForeignKey(User,related_name='user_to',on_delete=models.CASCADE)
+    user_from=models.ForeignKey(User,related_name='user_from',on_delete=models.CASCADE)
     is_accept=models.BooleanField(default=False)
+    def __str__(self):
+        return self.user_to.username + str(' ') + self.user_from.username
