@@ -20,3 +20,8 @@ class Postcomment(models.Model):
     user=models.ForeignKey(User,on_delete=models.CASCADE)
     post=models.ForeignKey(Post,on_delete=models.CASCADE)
     comment=models.TextField(max_length=999)
+
+class FriendRequest(models.Model):
+    to_user=models.ForeignKey(User,related_name='to_user',on_delete=models.CASCADE)
+    from_user=models.ForeignKey(User,related_name='from_user',on_delete=models.CASCADE)
+    is_accept=models.BooleanField(default=False)

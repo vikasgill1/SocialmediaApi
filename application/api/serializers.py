@@ -23,3 +23,7 @@ class CommentSerializer(ModelSerializer):
         model=Postcomment
         fields=('__all__')
 
+class FriendRequestSerializer(ModelSerializer):
+    class Meta:
+        model=FriendRequest
+        fields=('__all__')

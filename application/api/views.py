@@ -1,4 +1,7 @@
 
+from os import truncate
+from django.http import Http404
+from rest_framework.status import *
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
 from .serializers import *
@@ -11,6 +14,12 @@ from django.contrib.auth.models import User
 
 
 class Register(APIView):
+    def get(self,request):
+        stu=User.objects.all()
+        serializer=UserSerializer(stu,many=True)
+
+        return Response(serializer.data)
+
     def post(self,request):
         username=request.data['username']
         password=request.data['password']
@@ -81,19 +90,17 @@ class PostView(APIView):
 
 class likeView(APIView):
     def get(self,request):
-        data=request.data
-        stu=Postlike.objects.filter(post_id=data.get('post'),like=True)
-        count=stu.count()
+        
+        stu=Postlike.objects.filter(post=request.data.get('post'),like=True)
+        count=str(stu.count())
+        print(count)
         serializer=likeSerializer(stu,many=True)
-        return Response(serializer.data,{"like":count})
+        return Response({'data':serializer.data,'count':count})
 
 class like(APIView):
     permission_classes=[IsAuthenticated,]
     def post(self,request):
-        
-        user=request.user
-        data=request.data
-        stu,_=Postlike.objects.get_or_create(post_id=data.get('post'),user=user)
+        stu,_=Postlike.objects.get_or_create(post_id=request.data.get('post'),user=request.user)
         if stu.like == True :
             stu.like = False
             stu.save()
@@ -112,7 +119,7 @@ class CommentView(APIView):
         stu=Postcomment.objects.filter(post_id=data.get('post'))
         count=stu.count()
         serializer=likeSerializer(stu,many=True)
-        return Response(serializer.data,{"comment":count})
+        return Response({'data':serializer.data,"comment":count})
 
         
 class comment(APIView):
@@ -142,3 +149,54 @@ class comment(APIView):
         stu=User.objects.filter(user=user,post__id=data.get('post'))
         stu.delete()
         return Response({'status': 'your account delete successfull'})      
+
+class SendFriendRequest(APIView):
+    permission_classes=[IsAuthenticated,]
+    def get(self,request):
+        stu=FriendRequest.objects.filter(to_user=request.user,is_accept=False)
+        count=stu.count()
+        serializer=FriendRequestSerializer(stu)
+        return Response({'data':serializer.data,'count':count})
+    
+    def post(self,request):
+        stu=FriendRequest.objects.create(to_user=request.user)
+        serializer=FriendRequestSerializer(stu,data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status': 'Send Friend Request successfully'})
+        return Response({'status': serializer.errors})
+
+    def delete(self,request):
+        try:
+            stu=stu=FriendRequest.objects.filter(to_user=request.user,from_user=request.data.get('from_user'))
+            stu.delete()
+            return Response({'status': 'Cancel Friend Request successfully'})
+        except:
+            return Response({'status':'User does not exits'})
+
+
+
+
+class AcceptFriendRequest(APIView):
+    permission_classes=[IsAuthenticated,]
+    def get(self,request):
+        stu=FriendRequest.objects.filter(from_user=request.user,is_accept=False)
+        # counts=stu.count()
+        serializers=FriendRequestSerializer(stu)
+        return Response({'data':serializers.data})
+    
+    def patch(self,request):
+        stu=FriendRequest.objects.filter(from_user=request.user,is_accept=False)
+        serializer=FriendRequestSerializer(stu,data=request.data,partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status': 'accept Request successfully'})
+        return Response({'status': serializer.errors})
+
+    def delete(self,request):
+        try:
+            stu=stu=FriendRequest.objects.filter(from_user=request.user,to_user=request.data.get('to_user'))
+            stu.delete()
+            return Response({'status': 'Cancel  Request successfully'})
+        except:
+            return Response({'status':'User does not exits'})
